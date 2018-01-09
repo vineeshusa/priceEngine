@@ -18,6 +18,7 @@ import com.org.pricingEngine.service.helper.PricingTools;
 public class PricingToolsTest {
 	
 	Input input = null;
+	List <SurveyPrice> surveyPrices = null;
 	
 	
 	@Before
@@ -29,6 +30,36 @@ public class PricingToolsTest {
 		List <String> surveys = Arrays.asList("mp3 X 3.0", "mp3 Y 3.0", "mp3 Z 2.0", "ssd X 2.0", "ssd X 5.0", "ssd X 5.0");
 		input.setProducts(products);
 		input.setSurveys(surveys);
+	}
+	
+	@Test
+	public void filterOutLowPricesTest () {
+		
+		surveyPrices = Arrays.asList(
+					new SurveyPrice(3.0),
+					new SurveyPrice(300.0),
+					new SurveyPrice(301.0),
+					new SurveyPrice(302.0)
+				);
+		
+		PricingTools pricingTools = new PricingTools ();
+		List<SurveyPrice> filteredList = pricingTools.applyFilter(surveyPrices);
+		assertEquals(3, filteredList.size());
+	}
+	
+	@Test
+	public void filterOutHighPricesTest () {
+		
+		surveyPrices = Arrays.asList(
+					new SurveyPrice(3.0),
+					new SurveyPrice(3.0),
+					new SurveyPrice(3.0),
+					new SurveyPrice(302.0)
+				);
+		
+		PricingTools pricingTools = new PricingTools ();
+		List<SurveyPrice> filteredList = pricingTools.applyFilter(surveyPrices);
+		assertEquals(1, filteredList.size());
 	}
 
 
