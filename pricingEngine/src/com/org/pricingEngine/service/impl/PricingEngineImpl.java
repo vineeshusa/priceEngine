@@ -24,13 +24,13 @@ public class PricingEngineImpl implements PricingEngine {
 		//Filtering
 		List<SurveyPrice> surveyPrices = (List <SurveyPrice>)processParam.get("surveyPrices");
 		List<Product> products = (List <Product>)processParam.get("products");
-		pricingTools.applyFilter(surveyPrices);
+		Map<String, List<Double>> productPriceMap = pricingTools.applyFilter(products, surveyPrices);
 		
 		//identify the base price of the product
-		pricingTools.applyBasePrice(products, surveyPrices);
+		Map<String, Double> productNameToPriceMap = pricingTools.applyBasePrice(productPriceMap);
 		
 		//Apply Strategy to get the final Price 
-		pricingTools.applyStrategy(products, surveyPrices);
+		pricingTools.applyStrategy(products, productNameToPriceMap);
 		
 		Output output = new Output ();
 		List <Double> prices = pricingTools.generateOutput(products);

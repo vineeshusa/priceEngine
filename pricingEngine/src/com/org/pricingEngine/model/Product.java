@@ -10,6 +10,14 @@ public class Product {
 	private List<SurveyPrice> surveyPrices;
 	private double price;
 	
+	public Product(){}
+	
+	public Product(String name, String supplyParam, String demandParam) {
+		this.name = name;
+		this.supplyParam = supplyParam;
+		this.demandParam = demandParam;
+	}
+	
 	public double getPrice() {
 		return price;
 	}

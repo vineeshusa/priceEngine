@@ -6,5 +6,5 @@ import com.org.pricingEngine.model.SurveyPrice;
 
 public interface Filter {
 	
-	public List<SurveyPrice> filter (List<SurveyPrice> surveyPrices);
+	public List<Double> filter (List<Double> prices);
 }

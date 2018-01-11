@@ -3,6 +3,7 @@ package test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
@@ -15,14 +16,14 @@ import com.org.pricingEngine.model.SurveyPrice;
 public class HighPriceFilterTest {
 
 	@Test
-	public void test() {
+	public void testHighPriceFilter() {
 		
-		Filter highPriceFilter = new HighPriceFilter ();
-		Product product = new Product();
-		SurveyPrice surveyPrice = new SurveyPrice ();
-		
-		List <SurveyPrice> surveyPrices = new ArrayList <> ();
-		//highPriceFilter.filter(surveyPrices);
+		Filter highPriceFilter = new  HighPriceFilter(); 
+		List<Double> prices = Arrays.asList(1.0,2.0,3.0,500.0);
+		List<Double> filteredPrices = highPriceFilter.filter(prices);
+		List<Double> expectedPrices =  Arrays.asList(1.0,2.0,3.0);
+		assertEquals(3, filteredPrices.size());
+		assertTrue(filteredPrices.containsAll(expectedPrices));
 	}
 
 }

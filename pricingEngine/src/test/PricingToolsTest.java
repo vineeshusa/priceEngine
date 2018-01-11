@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,36 +34,88 @@ public class PricingToolsTest {
 	}
 	
 	@Test
-	public void filterOutLowPricesTest () {
+	public void getBasePriceTest() {
 		
-		surveyPrices = Arrays.asList(
-					new SurveyPrice(3.0),
-					new SurveyPrice(300.0),
-					new SurveyPrice(301.0),
-					new SurveyPrice(302.0)
-				);
-		
+		List<Double> prices = Arrays.asList(10.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0);
 		PricingTools pricingTools = new PricingTools ();
-		List<SurveyPrice> filteredList = pricingTools.applyFilter(surveyPrices);
-		assertEquals(3, filteredList.size());
+		double price = pricingTools.getBasePrice(prices);
+		assertEquals(9.0, price, 0.0);
+		
 	}
 	
 	@Test
-	public void filterOutHighPricesTest () {
-		
-		surveyPrices = Arrays.asList(
-					new SurveyPrice(3.0),
-					new SurveyPrice(3.0),
-					new SurveyPrice(3.0),
-					new SurveyPrice(302.0)
+	public void applyBasePriceTest() {
+		Map<String, List<Double>> prodNamePricesMap = new HashMap<>();
+		prodNamePricesMap.put("mp3", Arrays.asList(10.0,9.0,9.0,9.0,9.0,9.0,10.0,10.0));
+		prodNamePricesMap.put("ssd", Arrays.asList(9.0,9.0,10.0,10.0));
+		prodNamePricesMap.put("cd", Arrays.asList(9.0,8.0,7.0,6.0));
+		PricingTools pricingTools = new PricingTools ();
+		Map<String, Double> productNamePrice = pricingTools.applyBasePrice(prodNamePricesMap);
+		assertEquals(9.0, productNamePrice.get("mp3"), 0.0);
+		assertEquals(9.0, productNamePrice.get("ssd"), 0.0);
+		assertEquals(6.0, productNamePrice.get("cd"), 0.0);
+
+	}
+	
+	@Test
+	public void applyStrategyTest() {
+		List <Product> products = Arrays.asList(
+					new Product("mp3", "H", "L" ),
+					new Product("ssd", "L", "H" )
 				);
+		Map<String, Double> productNameToPriceMap = new HashMap<String, Double> ();
+		productNameToPriceMap.put("mp3", 100.0);
+		productNameToPriceMap.put("ssd", 1000.0);
 		
 		PricingTools pricingTools = new PricingTools ();
-		List<SurveyPrice> filteredList = pricingTools.applyFilter(surveyPrices);
-		assertEquals(1, filteredList.size());
+		List<Product> resultProducts = pricingTools.applyStrategy(products, productNameToPriceMap);
+		double mp3price = resultProducts
+				.stream().filter(p->p.getName()
+						.equals("mp3"))
+				.findFirst()
+				.get()
+				.getPrice();
+		double ssdprice = resultProducts
+				.stream().filter(p->p.getName()
+						.equals("ssd"))
+				.findFirst()
+				.get()
+				.getPrice();
+		
+		assertEquals(95.0, mp3price, 0.0);
+		assertEquals(1050.0, ssdprice, 0.0);
+		
+	}
+
+	
+		
+	@Test
+	public void filterOutLowPricesTest () {
+		
+		surveyPrices = Arrays.asList(
+					new SurveyPrice("mp3",3.0),
+					new SurveyPrice("mp3",300.0),
+					new SurveyPrice("mp3",301.0),
+					new SurveyPrice("mp3",302.0),
+					new SurveyPrice("ssd",3.0),
+					new SurveyPrice("ssd",300.0),
+					new SurveyPrice("ssd",3.0),
+					new SurveyPrice("ssd",3.0)
+				);
+		
+		List <Product> products = Arrays.asList(
+				new Product("mp3", "H", "L" ),
+				new Product("ssd", "L", "H" )
+			);
+		
+		PricingTools pricingTools = new PricingTools ();
+		Map<String, List<Double>> filteredMap = pricingTools.applyFilter(products, surveyPrices);
+		assertEquals(3, filteredMap.get("mp3").size());
+		assertEquals(3, filteredMap.get("ssd").size());
 	}
 
 
+	
 	@Test
 	public void parseInputTest() {
 

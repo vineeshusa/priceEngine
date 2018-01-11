@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -51,63 +53,63 @@ public class PricingTools {
 		processParams.put("products", products);
 		processParams.put("surveyPrices", surveyPrices);
 		
-		/*for (Product product : products) {
-			List<SurveyPrice> productBasedSurveyPrices = surveyPrices
-															.stream()
-															.filter(surveyPrice -> surveyPrice.getProductName()
-																			.equalsIgnoreCase(product.getName())
-															 )
-															.collect(Collectors.toList());
-			product.setSurveyPrices(productBasedSurveyPrices);
-		}*/
-		
 		return processParams;
 	}
 	
-	public List<SurveyPrice> applyFilter(List <SurveyPrice> surveyPrices) {
+	public Map<String, List<Double>> applyFilter (List <Product> products, List <SurveyPrice> surveyPrices) {
 		
-		List<SurveyPrice> filteredSurveyPrices = surveyPrices;
-		for (Filter filter: getFilters()) {
-			filteredSurveyPrices = filter.filter(surveyPrices);
+		Map<String, List<Double>> productPriceMap = new HashMap<> ();
+		for (Product product:  products) {
+			List<Double> prices = surveyPrices.stream()
+					.filter(sp -> sp.getProductName().equalsIgnoreCase(product.getName()))
+					.map(p->p.getPrice())
+					.collect(Collectors.toList());
+			for (Filter filter: getFilters()) {
+				prices = filter.filter(prices);
+			}
+			productPriceMap.put(product.getName(), prices);
 		}
-		
-		return filteredSurveyPrices;
+		return productPriceMap;
 	}
 	
-	public List<Product> applyBasePrice(List <Product> products, List <SurveyPrice> surveyPrices) {
+	public double getBasePrice(List<Double> prices) {
+		Map<Double,Long> priceCount = 
+				prices.stream()
+			           .collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+		Optional<Long> maxOccurance = priceCount.values().stream().reduce(Long::max);
+		List<Double> maxRepeatedPrices = new ArrayList<> ();
 		
-		for (Product product: products) {
+		priceCount.forEach((k,v)-> {
 			
-			Map<Double, List<SurveyPrice>>  groupByPrice = surveyPrices
-																	.stream()
-																	.collect(Collectors.groupingBy(sp -> sp.getPrice()));
+			if (v == maxOccurance.get()) {
+				maxRepeatedPrices.add(k);
+			}
 			
-			TreeMap <Integer, List<Double>> countToPriceListMap = new TreeMap<>();
-			groupByPrice.forEach((k, v) -> {
-				int size = v.size();
-				List <Double> priceList = null;
-				if(countToPriceListMap.get(size) == null) {
-					priceList = new ArrayList<>();
-					priceList.add(k);
-					countToPriceListMap.put(size, priceList);
-				}else {
-					countToPriceListMap.get(size).add(k);
-				}
-			});
-			Optional<Double> maxCountAges = countToPriceListMap
-					.get(countToPriceListMap.lastKey())
-					.stream().min((s1, s2) -> s1.compareTo(s2));
-			product.setPrice(maxCountAges.get());
-
-		}
-		return products;
+		});
+		
+		Optional<Double> price = maxRepeatedPrices.stream().reduce(Double::min);
+		return price.get();
 	}
 	
-	public List<Product> applyStrategy(List <Product> products, List <SurveyPrice> surveyPrices) {
+	public Map<String, Double> applyBasePrice(Map<String, List<Double>> productPriceMap) {
+		
+		Map <String, Double> productNameToPriceMap = new HashMap<> ();
+		
+		for (String productName : productPriceMap.keySet()) {
+			List<Double> prices = productPriceMap.get(productName);
+			double basePrice = getBasePrice(prices);
+			productNameToPriceMap.put(productName, basePrice);
+			
+			
+		}
+		return productNameToPriceMap;
+	}
+	
+	public List<Product> applyStrategy(List <Product> products, Map<String, Double> productNameToPriceMap) {
 		
 		for (Product product: products) {
 			Strategy strategy = getStrategy(product.getSupplyParam()+product.getDemandParam());
-			Double price = strategy.applyPriceStrategy(product.getPrice());
+			Double price = strategy.applyPriceStrategy(productNameToPriceMap.get(product.getName()));
 			product.setPrice(price);
 		}
 		return products;
@@ -132,11 +134,6 @@ public class PricingTools {
 		return list;
 	}
 	
-	public double findMostFrequentyOccuringPriceIfAny(List<SurveyPrice> surveyPrices){
-		double mostFrequentPrice = 0.00;
-		return mostFrequentPrice;
-	}
-	
 	public List<Filter> getFilters(){
 		List<Filter> filters = Arrays.asList(
 									 new HighPriceFilter(),
@@ -145,16 +142,4 @@ public class PricingTools {
 		return filters;
 	}
 	
-	/*public List<SupplyDemandPriceRecomender> getStrategies() {
-		return null;
-	}*/
-	
-	public int sum(int a, int b) {
-		return a+b;
-	}
-	
-	
-	
-	
-
 }

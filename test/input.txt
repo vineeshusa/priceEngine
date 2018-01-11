@@ -1,8 +1,11 @@
 2
 mp3 H H
 ssd H H
-4
+7
 mp3 X 3.0
-mp3 Y 2.0
+mp3 Y 3.0
+mp3 Z 3.0
 ssd X 3.0
-ssd Y 2.0
+ssd Y 3.0
+ssd z 4.0
+ssd k 4.0

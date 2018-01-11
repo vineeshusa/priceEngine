@@ -6,6 +6,17 @@ public class SurveyPrice {
 	private String Competetor;
 	private double price;
 	
+	public SurveyPrice(){}
+	
+	public SurveyPrice (String productName, double price) {
+		this.price = price;
+		this.productName = productName;
+	}
+	
+	public SurveyPrice (double price) {
+		this.price = price;
+	}
+	
 	public String getProductName() {
 		return productName;
 	}
